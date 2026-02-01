@@ -60,7 +60,7 @@ local Options = {
     loa_header_level = 1,
 
     -- How acronyms are recognized in the file
-    format = "simple"
+    format = "latex"
 }
 
 

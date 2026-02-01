@@ -143,15 +143,22 @@ end
 Replace each `\acr{KEY}` (or `\acr[opt]{KEY}`) with the correct text and link to the list of acronyms.
 --]]
 function replaceAcronym(el)
-    local command, acr_key, opts_str
-    if Options.format == "default" then
+    local command, acr_key, opts_str, isPlural
+
+    if Options.format == "latex" then
         -- Match \acr{key}, \acrs{key}, or with an option: \acr[opt]{key}, \acrs[opt]{key}
-        local pattern = "\\(acrs?)%[?(.-)%]?{(.+)}"
+        local pattern = "\\(acrs?)%(.-)%b%[%]{(.+)}"
         command, opts_str, acr_key = string.match(el.text, pattern)
-    elseif Options.format == "simple" then
+        isPlural = (command:sub(-1) == "s")
+    elseif Options.format == "markdown" then
         -- Match +key (singular), *key (plural), or with an option: +key{opt}, *key{opt}
-        local pattern = "([%+%*])(%w+){?(.-)}?"
+        local pattern = "([%+%*])(%w+)(.-)%b{}"
         command, acr_key, opts_str = string.match(el.text, pattern)
+        isPlural = (command == "*")
+    elseif Options.format == "basic" then
+        -- Match KEY
+        local pattern = "(%u+)"
+        acr_key = string.match(el.text, pattern)
     end
 
     if acr_key then
@@ -172,7 +179,7 @@ function replaceAcronym(el)
               is_first_use = Helpers.str_to_boolean(opts.first_use)
             end
 
-            local plural = (command:sub(-1) == "s")
+            local plural = isPlural
                     or (opts.plural == "true" or opts.plural == true)
 
             local case_target = opts.case_target
