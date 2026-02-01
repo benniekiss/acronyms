@@ -1,0 +1,13 @@
+---
+acronyms:
+  format: basic
+  keys:
+    - shortname: RL
+      longname: Reinforcement Learning
+---
+
+# Introduction {#intro}
+
+This paragraph mentions RL for the first time.
+
+And now, in this paragraph, RL is in short form.
