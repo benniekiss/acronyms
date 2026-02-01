@@ -94,7 +94,7 @@ function Helpers.str_to_boolean(value)
     }
     local result = converts[string.lower(value)]
     if result == nil then
-        pandoc.log.warning(
+        pandoc.log.warn(
             "[acronyms] Could not convert string to boolean, unrecognized value:",
             value,
             " ! Assuming `false`."

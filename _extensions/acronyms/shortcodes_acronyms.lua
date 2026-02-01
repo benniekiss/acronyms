@@ -69,7 +69,7 @@ end
 function replaceAcronym (args, kwargs, meta)
     -- We want exactly 1 (unnamed) argument for the shortcode.
     if #args == 0 or #args > 1 then
-        pandoc.log.error(
+        pandoc.log.warn(
             "[acronyms] Incorrect number of arguments in shortcode `acronym`!\n",
             "! Expected exactly 1 argument (the acronym key).\n",
             "x Found ", tostring(#args), ".\n",
@@ -112,7 +112,7 @@ end
 --]]
 function generateListOfAcronyms (args, kwargs, meta)
     if #args ~= 0 then
-        pandoc.log.warning(
+        pandoc.log.warn(
             "[acronyms] Unused arguments passed to shortcode `printacronyms`:",
             "expected 0, found", tostring(#args), "."
         )

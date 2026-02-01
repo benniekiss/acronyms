@@ -68,7 +68,7 @@ local Options = {
 Parse the options from the Metadata (i.e., the YAML fields).
 --]]
 function Options:parseOptionsFromMetadata(m)
-    pandoc.log.debug("[acronyms] Parsing options from metadata...", m.acronyms)
+    pandoc.log.info("[acronyms] Parsing options from metadata...", m.acronyms)
     -- Load the lang (can be `nil`); this is the only option outside `acronyms`.
     if m.lang ~= nil then
         self.lang = pandoc.utils.stringify(m.lang)
@@ -153,7 +153,7 @@ function Options:parseOptionsFromMetadata(m)
             -- Just in case the user set a float value
             self.loa_header_level = math.floor(float_value)
         else
-            pandoc.log.error(
+            pandoc.log.warn(
                 "[acronyms] Could not cast", str_value, "to an integer.",
                 "Please set option `loa_header_level` to a valid integer value."
             )
