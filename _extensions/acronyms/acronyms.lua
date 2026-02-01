@@ -286,7 +286,7 @@ function Acronyms:parseSimplifiedFormat(metadata, on_duplicate)
         shortname = pandoc.utils.stringify(shortname)
         longname = pandoc.utils.stringify(longname)
         local acronym = Acronym:new{
-            key = nil,
+            key = shortname,
             shortname = shortname,
             longname = longname,
             original_metadata = original_metadata,
