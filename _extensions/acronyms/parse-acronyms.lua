@@ -152,12 +152,12 @@ function replaceAcronym(el)
         -- Match \acr{key}, \acrs{key}, or with an option: \acr[opt]{key}, \acrs[opt]{key}
         local pattern = "\\(acrs?)%[?(.-)%]?{(.+)}"
         command, opts_str, acr_key = string.match(el.text, pattern)
-        isPlural = (command:sub(-1) == "s")
+        isPlural = command and (command:sub(-1) == "s")
     elseif Options.format == "markdown" and el.t == "Str" then
         -- Match +key (singular), *key (plural), or with an option: +key{opt}, *key{opt}
         local pattern = "([%+%*])(%w+){?(.-)}?"
         command, acr_key, opts_str = string.match(el.text, pattern)
-        isPlural = (command == "*")
+        isPlural = command and (command == "*")
     elseif Options.format == "basic" and el.t == "Str" then
         -- Match KEY
         local pattern = "^(%u+)$"
