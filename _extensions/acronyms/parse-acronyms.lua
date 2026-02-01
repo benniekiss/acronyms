@@ -143,8 +143,16 @@ end
 Replace each `\acr{KEY}` (or `\acr[opt]{KEY}`) with the correct text and link to the list of acronyms.
 --]]
 function replaceAcronym(el)
-    -- Match \acr{key}, \acrs{key}, or with an option: \acr[opt]{key}, \acrs[opt]{key}
-    local command, opts_str, acr_key = string.match(el.text, "\\(acrs?)%[?(.-)%]?{(.+)}")
+    local command, acr_key, opts_str
+    if Options.format == "default" then
+        -- Match \acr{key}, \acrs{key}, or with an option: \acr[opt]{key}, \acrs[opt]{key}
+        local pattern = "\\(acrs?)%[?(.-)%]?{(.+)}"
+        command, opts_str, acr_key = string.match(el.text, pattern)
+    elseif Options.format == "simple" then
+        -- Match +key (singular), *key (plural), or with an option: +key{opt}, *key{opt}
+        local pattern = "([%+%*])(%w+){?(.-)}?"
+        command, acr_key, opts_str = string.match(el.text, pattern)
+    end
 
     if acr_key then
         -- This is an acronym, we need to parse it.

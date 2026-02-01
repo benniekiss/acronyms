@@ -59,6 +59,8 @@ local Options = {
     -- The header level to use for the List of Acronyms header.
     loa_header_level = 1,
 
+    -- How acronyms are recognized in the file
+    format = "simple"
 }
 
 
@@ -157,6 +159,10 @@ function Options:parseOptionsFromMetadata(m)
             )
             assert(false)
         end
+    end
+
+    if options["format"] ~= nil then
+        self.format = pandoc.utils.stringify(options["format"])
     end
 end
 
