@@ -93,6 +93,8 @@ def test_single_dir(dir_name: str):
     command = subprocess.run(
         [
             'pandoc',
+            '--wrap',
+            'preserve',
             '--lua-filter',
             '../_extensions/acronyms/parse-acronyms.lua',
             '-i',
@@ -101,7 +103,6 @@ def test_single_dir(dir_name: str):
             'markdown',
             '-w',
             'markdown',
-            # '--verbose'
         ],
         # We want to capture stdout and stderr
         capture_output=True,
