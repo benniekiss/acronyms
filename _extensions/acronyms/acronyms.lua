@@ -154,7 +154,7 @@ end
 
 -- Add a new acronym to the table. Also handles duplicates.
 function Acronyms:add(acronym, on_duplicate)
-    pandoc.log.info("[acronyms] Trying to add a new acronym... " .. acronym)
+    pandoc.log.info("[acronyms] Trying to add a new acronym... " .. pandoc.utils.stringify(acronym))
     assert(acronym ~= nil,
         "[acronyms] The acronym should not be nil in Acronyms:add!")
     assert(acronym.key ~= nil,
@@ -200,7 +200,7 @@ end
 
 -- Populate the Acronyms database from a YAML metadata
 function Acronyms:parseFromMetadata(metadata, on_duplicate)
-    pandoc.log.info("[acronyms] Parsing acronyms from metadata... " .. metadata.acronyms)
+    pandoc.log.info("[acronyms] Parsing acronyms from metadata... " .. pandoc.utils.stringify(metadata.acronyms))
     -- We expect the acronyms to be in the `metadata.acronyms.keys` field.
     if not (metadata and metadata.acronyms and metadata.acronyms.keys) then
         return

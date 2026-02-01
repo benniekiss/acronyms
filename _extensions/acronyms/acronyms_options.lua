@@ -68,7 +68,7 @@ local Options = {
 Parse the options from the Metadata (i.e., the YAML fields).
 --]]
 function Options:parseOptionsFromMetadata(m)
-    pandoc.log.info("[acronyms] Parsing options from metadata... " .. m.acronyms)
+    pandoc.log.info("[acronyms] Parsing options from metadata... " .. pandoc.utils.stringify(m.acronyms))
     -- Load the lang (can be `nil`); this is the only option outside `acronyms`.
     if m.lang ~= nil then
         self.lang = pandoc.utils.stringify(m.lang)
