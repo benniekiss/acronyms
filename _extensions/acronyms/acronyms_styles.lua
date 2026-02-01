@@ -14,7 +14,7 @@
 
     More specifically, this file defines a table of functions.
     Each function takes an acronym, and return one or several Pandoc elements.
-    These elements will replace the original acronym call in the Markdown 
+    These elements will replace the original acronym call in the Markdown
     document.
 
     Most styles will depend on whether this is the acronym's first occurrence,
@@ -23,10 +23,10 @@
     For example, a simple (default) style can be to return the acronym's
     long name, followed by the short name between parentheses.
     When the parser encounters `\acr{RL}`, assuming that `RL` is correctly
-    defined in the acronyms database, the corresponding function would 
+    defined in the acronyms database, the corresponding function would
     return a Pandoc Link, where the text is "Reinforcement Learning (RL)",
     and pointing to the definition of "RL" in the List of Acronyms.
-    
+
     Note: the acronym's key MUST exist in the acronyms database.
     Functions to replace a non-existing key must be handled elsewhere.
 
@@ -118,8 +118,7 @@ end
 
 -- The "public" API of this module, the function which is returned by
 -- require.
-return function(acronym, style_name, insert_links, is_first_use, plural, 
-    case_target, case)
+return function(acronym, style_name, insert_links, is_first_use, plural, case_target, case)
     -- Check that the requested strategy exists
     assert(style_name ~= nil,
         "[acronyms] The parameter style_name must not be nil!")
