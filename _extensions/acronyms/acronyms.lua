@@ -50,7 +50,7 @@ local function raiseAcronymCreationError(object)
     -- Acronym (which could be obtained with `tostring(object)`).
     local acronym_str = Helpers.metadata_to_str(object.original_metadata)
     msg = msg .. "i The acronym was defined as: " .. acronym_str .. "\n"
-    quarto.log.error("[acronyms]", msg, "\n")
+    pandoc.log.error("[acronyms]", msg, "\n")
     assert(false)
 end
 
@@ -155,7 +155,7 @@ end
 
 -- Add a new acronym to the table. Also handles duplicates.
 function Acronyms:add(acronym, on_duplicate)
-    quarto.log.debug("[acronyms] Trying to add a new acronym...", acronym)
+    pandoc.log.debug("[acronyms] Trying to add a new acronym...", acronym)
     assert(acronym ~= nil,
         "[acronyms] The acronym should not be nil in Acronyms:add!")
     assert(acronym.key ~= nil,
@@ -165,7 +165,7 @@ function Acronyms:add(acronym, on_duplicate)
 
     -- Handling duplicate keys
     if self:contains(acronym.key) then
-        quarto.log.debug("[acronyms] Found an acronym with a duplicate key: ", acronym.key)
+        pandoc.log.debug("[acronyms] Found an acronym with a duplicate key: ", acronym.key)
         if on_duplicate == "replace" then
             -- Do nothing, let us replace the previous acronym.
         elseif on_duplicate == "keep" then
@@ -173,14 +173,14 @@ function Acronyms:add(acronym, on_duplicate)
             return
         elseif on_duplicate == "warn" then
             -- Warn, and do not replace.
-            quarto.log.warning("[acronyms] Found an acronym with a duplicate key: ", acronym.key)
+            pandoc.log.warning("[acronyms] Found an acronym with a duplicate key: ", acronym.key)
             return
         elseif on_duplicate == "error" then
             -- Stop execution.
-            quarto.log.error("[acronyms] Found an acronym with a duplicate key: ", acronym.key)
+            pandoc.log.error("[acronyms] Found an acronym with a duplicate key: ", acronym.key)
             assert(false)
         else
-            quarto.log.error("[acronyms] Unrecognized option `on_duplicate`=", tostring(on_duplicate), " in Acronyms:add.")
+            pandoc.log.error("[acronyms] Unrecognized option `on_duplicate`=", tostring(on_duplicate), " in Acronyms:add.")
             assert(false)
         end
     end
@@ -201,14 +201,14 @@ end
 
 -- Populate the Acronyms database from a YAML metadata
 function Acronyms:parseFromMetadata(metadata, on_duplicate)
-    quarto.log.debug("[acronyms] Parsing acronyms from metadata...", metadata.acronyms)
+    pandoc.log.debug("[acronyms] Parsing acronyms from metadata...", metadata.acronyms)
     -- We expect the acronyms to be in the `metadata.acronyms.keys` field.
     if not (metadata and metadata.acronyms and metadata.acronyms.keys) then
         return
     end
     -- This field should be a Pandoc "MetaList" (so we can iter over it).
     if not Helpers.isMetaList(metadata.acronyms.keys) then
-        quarto.log.error("[acronyms] The `acronyms.keys` metadata should be a list!")
+        pandoc.log.error("[acronyms] The `acronyms.keys` metadata should be a list!")
         assert(false)
     end
 
@@ -220,7 +220,7 @@ function Acronyms:parseFromMetadata(metadata, on_duplicate)
         local key = v.key and pandoc.utils.stringify(v.key)
         local shortname = v.shortname and pandoc.utils.stringify(v.shortname)
         local longname = v.longname and pandoc.utils.stringify(v.longname)
-        local shortname_plural = v.plural and v.plural.shortname and 
+        local shortname_plural = v.plural and v.plural.shortname and
             pandoc.utils.stringify(v.plural.shortname)
         local longname_plural = v.plural and v.plural.longname and
             pandoc.utils.stringify(v.plural.longname)
@@ -242,14 +242,14 @@ end
 -- Populate the Acronyms database from a YAML file
 -- Inspired from https://github.com/dsanson/pandoc-abbreviations.lua/
 function Acronyms:parseFromYamlFile(filepath, on_duplicate)
-    quarto.log.debug("[acronyms] Trying to parse acronyms from file: ", filepath)
+    pandoc.log.debug("[acronyms] Trying to parse acronyms from file: ", filepath)
     assert(filepath ~= nil,
         "[acronyms] filepath must not be nil when parsing from external file!")
 
     -- First, read the file's content.
     local file = io.open(filepath, "r")
     if file == nil then
-        quarto.log.warning("[acronyms] File ", filepath, " could not be read! (does not exist?)")
+        pandoc.log.warning("[acronyms] File ", filepath, " could not be read! (does not exist?)")
         return
     end
     local content = file:read("*a")

@@ -53,7 +53,7 @@ function sort_acronyms(acronyms, criterion, include_unused)
         local msg = "[acronyms] Error when sorting acronyms:\n"
         msg = msg .. "! Sorting criterion unrecognized: " .. tostring(criterion) .. "\n"
         msg = msg .. "i Please check the `acronyms.sorting` metadata option.\n"
-        quarto.log.error(msg)
+        pandoc.log.error(msg)
         assert(false)
     end
 
@@ -63,7 +63,7 @@ function sort_acronyms(acronyms, criterion, include_unused)
         local msg = "[acronyms] Error when sorting acronyms:\n"
         msg = msg .. "! Cannot sort by `usage` when `include_unused` is true\n"
         msg = msg .. "i Please set another sorting or set `include_unused` to `false`."
-        quarto.log.error(msg)
+        pandoc.log.error(msg)
         assert(false)
     end
 

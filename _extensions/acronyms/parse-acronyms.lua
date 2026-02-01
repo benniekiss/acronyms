@@ -91,7 +91,7 @@ function appendLoA(doc)
         -- Insert at the last block in the document
         pos = #doc.blocks + 1
     else
-        quarto.log.error(
+        pandoc.log.error(
             "[acronyms] Unrecognized option `insert_loa`=`",
             tostring(Options["insert_loa"]),
             "` in `appendLoA`."

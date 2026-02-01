@@ -27,7 +27,7 @@ local Translations = {
 -- Returns a table { lang, translation }, where `lang` is the closest language
 -- found, and `translation` is the desired string in the found language.
 function Translations:find_best(lang, translations)
-    quarto.log.debug("[acronyms] Request translation for ", lang)
+    pandoc.log.debug("[acronyms] Request translation for ", lang)
 
     -- We will need to iterate over the subtags; for example, for `zh-Hant-CN`,
     -- it should yield `zh-Hant-CN`, then `zh-Hant`, then `zh` (and finally ``).
@@ -49,7 +49,7 @@ function Translations:find_best(lang, translations)
         if translations[lang_components[i]] ~= nil then
             local found_lang = lang_components[i]
             local found_translation = translations[lang_components[i]]
-            quarto.log.debug("[acronyms] Found translation ", found_translation,
+            pandoc.log.debug("[acronyms] Found translation ", found_translation,
                 " for lang ", found_lang)
             return {
                 ["lang"] = found_lang,
@@ -63,7 +63,7 @@ end
 function Translations:get_loa_title(lang)
     local found = self:find_best(lang, self.loa_title)
     if found == nil then
-        quarto.log.error(
+        pandoc.log.error(
             "[acronyms] Could not find a suitable translation for ", lang, "!",
             "Please ensure that a default translation is available for loa_title"
         )

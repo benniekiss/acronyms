@@ -94,7 +94,7 @@ function Helpers.str_to_boolean(value)
     }
     local result = converts[string.lower(value)]
     if result == nil then
-        quarto.log.warning(
+        pandoc.log.warning(
             "[acronyms] Could not convert string to boolean, unrecognized value:",
             value,
             " ! Assuming `false`."

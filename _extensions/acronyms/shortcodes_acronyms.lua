@@ -69,7 +69,7 @@ end
 function replaceAcronym (args, kwargs, meta)
     -- We want exactly 1 (unnamed) argument for the shortcode.
     if #args == 0 or #args > 1 then
-        quarto.log.error(
+        pandoc.log.error(
             "[acronyms] Incorrect number of arguments in shortcode `acronym`!\n",
             "! Expected exactly 1 argument (the acronym key).\n",
             "x Found ", tostring(#args), ".\n",
@@ -112,7 +112,7 @@ end
 --]]
 function generateListOfAcronyms (args, kwargs, meta)
     if #args ~= 0 then
-        quarto.log.warning(
+        pandoc.log.warning(
             "[acronyms] Unused arguments passed to shortcode `printacronyms`:",
             "expected 0, found", tostring(#args), "."
         )
