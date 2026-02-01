@@ -72,7 +72,7 @@ def read_file(file_path, default=None):
     try:
         with open(file_path, 'r') as f:
             # `readlines` would not return the exact same result with blank lines
-            lines = f.read()
+            lines = f.read().split('\n')
             return lines
     except FileNotFoundError as e:
         if default is not None:
@@ -113,11 +113,11 @@ def test_single_dir(dir_name: str):
 
     end_time = timeit.default_timer()
     # Get return code, standard error (errors or warnings log).
-    code, stdout, stderr = command.returncode, command.stdout, command.stderr
+    code, stdout, stderr = command.returncode, command.stdout.split('\n'), command.stderr.split('\n')
     # The expected output document
-    expected_output = read_file(test_path / 'expected.md', default='')
+    expected_output = read_file(test_path / 'expected.md', default=[''])
     # The expected errors / warnings log
-    expected_error = read_file(test_path / 'expected.stderr', default='')
+    expected_error = read_file(test_path / 'expected.stderr', default=[''])
 
     print('\n\nSTDERR:')
     print(stderr)
