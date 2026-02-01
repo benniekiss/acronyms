@@ -86,8 +86,6 @@ def test_single_dir(dir_name: str):
     test_path = tests_folder_path / dir_name
     # Path to the input file (Quarto document).
     input_file_path = test_path / 'input.qmd'
-    # Path to output file (same as input, but with `.md` extension).
-    output_file_path = test_path / 'input.md'
 
     # Create a new process and ask Quarto to render the document.
     # We also measure the wall-clock time (in miliseconds).
@@ -96,7 +94,7 @@ def test_single_dir(dir_name: str):
         [
             'pandoc',
             '--lua-filter',
-            '_extensions/acronyms/parse-acronyms.lua',
+            '../_extensions/acronyms/parse-acronyms.lua',
             '-i',
             input_file_path,
             '-r',
@@ -109,7 +107,9 @@ def test_single_dir(dir_name: str):
         capture_output=True,
         # And we want them to be decoded as text rather than bytes
         text=True,
+        cwd=test_path,
     )
+
     end_time = timeit.default_timer()
     # Get return code, standard error (errors or warnings log).
     code, stdout, stderr = command.returncode, command.stdout, command.stderr

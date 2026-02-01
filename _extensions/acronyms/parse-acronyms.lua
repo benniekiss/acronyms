@@ -149,16 +149,25 @@ function replaceAcronym(el)
     local command, acr_key, opts_str, isPlural
 
     if Options.format == "latex" then
+        if el.t ~= "RawInline" then
+            return nil
+        end
         -- Match \acr{key}, \acrs{key}, or with an option: \acr[opt]{key}, \acrs[opt]{key}
         local pattern = "\\(acrs?)%[?(.-)%]?{(.+)}"
         command, opts_str, acr_key = string.match(el.text, pattern)
         isPlural = command and (command:sub(-1) == "s")
     elseif Options.format == "markdown" then
+        if el.t ~= "Str" then
+            return nil
+        end
         -- Match +key (singular), *key (plural), or with an option: +key{opt}, *key{opt}
         local pattern = "([%+%*])(%w+){?(.-)}?"
         command, acr_key, opts_str = string.match(el.text, pattern)
         isPlural = (command == "*")
     elseif Options.format == "basic" then
+        if el.t ~= "Str" then
+            return nil
+        end
         -- Match KEY
         local pattern = "^(%u+)$"
         acr_key = string.match(el.text, pattern)
