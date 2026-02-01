@@ -148,26 +148,17 @@ Replace each `\acr{KEY}` (or `\acr[opt]{KEY}`) with the correct text and link to
 function replaceAcronym(el)
     local command, acr_key, opts_str, isPlural
 
-    if Options.format == "latex" then
-        if el.t ~= "RawInline" then
-            return nil
-        end
+    if Options.format == "latex" and el.t == "RawInline" then
         -- Match \acr{key}, \acrs{key}, or with an option: \acr[opt]{key}, \acrs[opt]{key}
         local pattern = "\\(acrs?)%[?(.-)%]?{(.+)}"
         command, opts_str, acr_key = string.match(el.text, pattern)
-        isPlural = command and (command:sub(-1) == "s")
-    elseif Options.format == "markdown" then
-        if el.t ~= "Str" then
-            return nil
-        end
+        isPlural = (command:sub(-1) == "s")
+    elseif Options.format == "markdown" and el.t == "Str" then
         -- Match +key (singular), *key (plural), or with an option: +key{opt}, *key{opt}
         local pattern = "([%+%*])(%w+){?(.-)}?"
         command, acr_key, opts_str = string.match(el.text, pattern)
         isPlural = (command == "*")
-    elseif Options.format == "basic" then
-        if el.t ~= "Str" then
-            return nil
-        end
+    elseif Options.format == "basic" and el.t == "Str" then
         -- Match KEY
         local pattern = "^(%u+)$"
         acr_key = string.match(el.text, pattern)
@@ -208,10 +199,10 @@ function replaceAcronym(el)
             local non_existing = opts.non_existing or nil
             return AcronymsPandoc.replaceNonExistingAcronym(acr_key, non_existing)
         end
-    else
-        -- This is not an acronym, return nil to leave it unchanged.
-        return nil
     end
+
+    -- This is not an acronym, return nil to leave it unchanged.
+    return nil
 end
 
 
