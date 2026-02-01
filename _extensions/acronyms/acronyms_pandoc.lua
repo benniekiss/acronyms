@@ -59,23 +59,23 @@ function AcronymsPandoc.replaceNonExistingAcronym(acr_key, non_existing)
     non_existing = non_existing or Options["non_existing"]
 
     if non_existing == "key" then
-        pandoc.log.warn("[acronyms] Acronym key", acr_key, "not recognized")
+        pandoc.log.warn("[acronyms] Acronym key " .. acr_key .. " not recognized")
         return pandoc.Str(acr_key)
     elseif non_existing == "??" then
-        pandoc.log.warn("[acronyms] Acronym key", acr_key, "not recognized")
+        pandoc.log.warn("[acronyms] Acronym key " .. acr_key .. " not recognized")
         return pandoc.Str("??")
     elseif non_existing == "error" then
         pandoc.log.warn(
-            "[acronyms] Acronym key",
-            tostring(acr_key),
-            "not recognized, stopping!"
+            "[acronyms] Acronym key "
+            .. tostring(acr_key)
+            .. " not recognized, stopping!"
         )
         assert(false)
     else
         pandoc.log.warn(
-            "[acronyms] Unrecognized option `non_existing`=`",
-            tostring(non_existing),
-            "` when replacing acronyms."
+            "[acronyms] Unrecognized option `non_existing`=` "
+            .. tostring(non_existing)
+            .. " ` when replacing acronyms."
         )
         assert(false)
     end
@@ -99,7 +99,7 @@ end
 function AcronymsPandoc.replaceExistingAcronym(
     acr_key, style, first_use, insert_links, plural, case_target, case
 )
-    pandoc.log.info("[acronyms] Replacing acronym", acr_key)
+    pandoc.log.info("[acronyms] Replacing acronym " .. acr_key)
     local acronym = Acronyms:get(acr_key)
     acronym:incrementOccurrences()
     if acronym:isFirstUse() then
@@ -158,7 +158,7 @@ function AcronymsPandoc.generateCustomFormat(sorted_acronyms, loa_format)
     local document_markup = ""
     for _, acronym in ipairs(sorted_acronyms) do
         pandoc.log.info(
-            "[acronyms] Generating definition for acronym", acronym.key
+            "[acronyms] Generating definition for acronym " .. acronym.key
         )
         local id = Helpers.key_to_id(acronym.key)
         -- The acronym's name. We want it to be rendered with an ID attribute.
@@ -168,11 +168,11 @@ function AcronymsPandoc.generateCustomFormat(sorted_acronyms, loa_format)
         local acronym_markup = loa_format:gsub("{shortname}", name)
         acronym_markup = acronym_markup:gsub("{longname}", acronym.longname)
         pandoc.log.info(
-            "[acronyms] Template markup processed as", acronym_markup
+            "[acronyms] Template markup processed as " .. acronym_markup
         )
         document_markup = document_markup .. acronym_markup .. "\n\n"
     end
-    pandoc.log.info("[acronyms] Rendering Markdown markup:\n", document_markup)
+    pandoc.log.info("[acronyms] Rendering Markdown markup:\n" .. document_markup)
     local document = pandoc.read(document_markup)
     -- We want to return all rendered blocks (potentially multiline content,
     -- such as bullet lists, divs, paragraphs, ...); but we cannot use `blocks`
@@ -240,13 +240,13 @@ function AcronymsPandoc.generateLoA(sorting, include_unused, title, header_class
     header_level = header_level or Options['loa_header_level']
     if tonumber(header_level) == nil then
         pandoc.log.warn(
-            "[acronyms] Could not cast", header_level, "to number.",
-            "Please set the `header_level` to a valid integer value."
+            "[acronyms] Could not cast", header_level, "to number. "
+            .. "Please set the `header_level` to a valid integer value."
         )
         assert(false)
     end
     header_level = math.floor(tonumber(header_level))
-    pandoc.log.info("[acronyms] Using header level", tostring(header_level))
+    pandoc.log.info("[acronyms] Using header level " .. tostring(header_level))
 
     -- Create the Header (only if the title is not empty)
     local header = nil

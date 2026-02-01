@@ -27,7 +27,7 @@ local Translations = {
 -- Returns a table { lang, translation }, where `lang` is the closest language
 -- found, and `translation` is the desired string in the found language.
 function Translations:find_best(lang, translations)
-    pandoc.log.info("[acronyms] Request translation for ", lang)
+    pandoc.log.info("[acronyms] Request translation for " .. lang)
 
     -- We will need to iterate over the subtags; for example, for `zh-Hant-CN`,
     -- it should yield `zh-Hant-CN`, then `zh-Hant`, then `zh` (and finally ``).
@@ -49,8 +49,9 @@ function Translations:find_best(lang, translations)
         if translations[lang_components[i]] ~= nil then
             local found_lang = lang_components[i]
             local found_translation = translations[lang_components[i]]
-            pandoc.log.info("[acronyms] Found translation ", found_translation,
-                " for lang ", found_lang)
+            pandoc.log.info("[acronyms] Found translation "
+            .. found_translation
+            .. " for lang ", found_lang)
             return {
                 ["lang"] = found_lang,
                 ["translation"] = found_translation
@@ -64,8 +65,10 @@ function Translations:get_loa_title(lang)
     local found = self:find_best(lang, self.loa_title)
     if found == nil then
         pandoc.log.warn(
-            "[acronyms] Could not find a suitable translation for ", lang, "!",
-            "Please ensure that a default translation is available for loa_title"
+            "[acronyms] Could not find a suitable translation for "
+            .. lang
+            .. "!"
+            .. " Please ensure that a default translation is available for loa_title"
         )
         assert(false)
     end
