@@ -20,9 +20,6 @@ local Helpers = require("acronyms_helpers")
 -- The Acronyms database
 local Acronyms = require("acronyms")
 
--- Sorting function
-local sortAcronyms = require("sort_acronyms")
-
 -- Replacement function
 local AcronymsPandoc = require("acronyms_pandoc")
 
@@ -82,7 +79,7 @@ end
 --[[
     Append the List Of Acronyms to the document (at the beginning).
 --]]
-function appendLoA(doc)
+local function appendLoA(doc)
     local pos
     if not Options["insert_loa"] then
         -- If disabled, do nothing
@@ -142,35 +139,43 @@ function RawBlock(el)
 end
 
 
+-- Match \acr{key}, \acrs{key}, or with an option: \acr[opt]{key}, \acrs[opt]{key}
+local LATEX_PATTERN = "\\(acrs?)%[?(.-)%]?{(.+)}"
+-- Match +key (singular), *key (plural), or with an option: +key{opt}, *key{opt}
+local MD_PATTERN = "([%+%*])(%w+){?(.-)}?"
+-- Match KEY
+local BASIC_PATTERN = "^(%u+)$"
+
+
+local function parseKey(text)
+    local command, key, opts, plural
+
+    if Options.format == "latex" then
+        command, opts, key = string.match(text, LATEX_PATTERN)
+        plural = command and (command:sub(-1) == "s")
+    elseif Options.format == "markdown" then
+        command, key, opts = string.match(text, MD_PATTERN)
+        plural = command and (command == "*")
+    elseif Options.format == "basic" then
+        key = string.match(text, BASIC_PATTERN)
+        plural = false
+    end
+
+    return key, opts, plural
+end
+
+
 --[[
 Replace each `\acr{KEY}` (or `\acr[opt]{KEY}`) with the correct text and link to the list of acronyms.
 --]]
-function replaceAcronym(el)
-    local command, acr_key, opts_str, isPlural
+local function replaceAcronym(el)
+    local key, opts, plural = parseKey(el.text)
 
-    if Options.format == "latex" and el.t == "RawInline" then
-        -- Match \acr{key}, \acrs{key}, or with an option: \acr[opt]{key}, \acrs[opt]{key}
-        local pattern = "\\(acrs?)%[?(.-)%]?{(.+)}"
-        command, opts_str, acr_key = string.match(el.text, pattern)
-        isPlural = command and (command:sub(-1) == "s")
-    elseif Options.format == "markdown" and el.t == "Str" then
-        -- Match +key (singular), *key (plural), or with an option: +key{opt}, *key{opt}
-        local pattern = "([%+%*])(%w+){?(.-)}?"
-        command, acr_key, opts_str = string.match(el.text, pattern)
-        isPlural = command and (command == "*")
-    elseif Options.format == "basic" and el.t == "Str" then
-        -- Match KEY
-        local pattern = "^(%u+)$"
-        acr_key = string.match(el.text, pattern)
-        isPlural = false
-    end
+    if key then
+        -- parse the options
+        opts = parse_opts(opts)
 
-    if acr_key then
-        -- This is an acronym, we need to parse it.
-        if Acronyms:contains(acr_key) then
-            -- The acronym exists (and is recognized)
-            local opts = parse_opts(opts_str)
-
+        if Acronyms:contains(key) then
             local style = opts.style or nil
 
             local insert_links = nil
@@ -183,21 +188,19 @@ function replaceAcronym(el)
               is_first_use = Helpers.str_to_boolean(opts.first_use)
             end
 
-            local plural = isPlural
-                    or (opts.plural == "true" or opts.plural == true)
+            plural = plural or (opts.plural == "true" or opts.plural == true)
 
             local case_target = opts.case_target
 
             local case = opts.case
 
             return AcronymsPandoc.replaceExistingAcronym(
-                acr_key, style, is_first_use, insert_links, plural, case_target, case
+                key, style, is_first_use, insert_links, plural, case_target, case
             )
         else
             -- The acronym does not exists
-            local opts = parse_opts(opts_str)
             local non_existing = opts.non_existing or nil
-            return AcronymsPandoc.replaceNonExistingAcronym(acr_key, non_existing)
+            return AcronymsPandoc.replaceNonExistingAcronym(key, non_existing)
         end
     end
 
