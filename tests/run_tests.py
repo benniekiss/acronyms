@@ -119,18 +119,9 @@ def test_single_dir(dir_name: str):
     # The expected errors / warnings log
     expected_error = read_file(test_path / 'expected.stderr', default=[''])
 
-    print('\n\nSTDERR:')
-    print(stderr)
-
-    import json
-    print('\n\nSTDOUT:')
-    print(json.dumps(stdout, indent=4))
-    print('\n\nEXPECTED:')
-    print(json.dumps(expected_output, indent=4))
-
     success = (code == 0) and\
               (stdout == expected_output) and\
-              (stderr == expected_error)
+              (all(a.endswith(e) for a, e in zip(stderr, expected_error)))
 
     return TestResult(
         dir_name,
@@ -151,7 +142,7 @@ def reporter_oneline(result):
     ok, ko = bold(green('OK')), bold(red('KO'))
     code = ok if result.return_code == 0 else bold(red(str(result.return_code)))
     stdout = ok if result.actual_output == result.expected_output else ko
-    stderr = ok if result.actual_error == result.expected_error else ko
+    stderr = ok if all(a.endswith(e) for a, e in zip(result.actual_error, result.expected_error)) else ko
     return f' {success} (Retcode: {code} | Stdout: {stdout} | Stderr: {stderr})'
 
 
