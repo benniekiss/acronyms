@@ -24,10 +24,8 @@ class TestResult:
     success: bool
     return_code: int
     input_file_path: Path
-    original_output: list  # Unfiltered result
     actual_output: list    # Filtered result to remove Quarto details
     expected_output: list
-    original_error: list   # Unfiltered error logs
     actual_error: list     # Filtered errors to remove Quarto details
     expected_error: list
     execution_time_ms: float
@@ -65,7 +63,7 @@ def ensure_symlink_exists():
 def read_file(file_path, default=None):
     """
     Read and return a file's contents, or optionally a default value.
-    
+
     If the file can not be found:
         - if `default` is set, ignores the error, and returns this value.
         - else, raises the error.
@@ -74,42 +72,12 @@ def read_file(file_path, default=None):
     try:
         with open(file_path, 'r') as f:
             # `readlines` would not return the exact same result with blank lines
-            lines = f.read().split('\n')
+            lines = f.read()
             return lines
     except FileNotFoundError as e:
         if default is not None:
             return default
         raise e
-
-
-def filter_stdout(stdout):
-    # Unfortunately, Quarto renders the YAML metadata inside the md document
-    # (when using the `md` format), contrary to "pure" Pandoc.
-    # We need to remove these lines to compare the output to the expected one.
-    metadata_start_index = stdout.index('---')
-    # We want to find the 2nd `'---'` line, i.e., the one after the first!
-    metadata_end_index = stdout.index('---', metadata_start_index + 1)
-    # We take only lines after the last `'---'` + 2
-    # (+2 because we do not want the `'---'` itself, nor the next blank line).
-    stdout = stdout[metadata_end_index+2:]
-    return stdout
-
-
-def filter_stderr(stderr):
-    # We want to check for warnings in the **acronyms** extension.
-    # However, Quarto outputs some debug information on stderr...
-    # Using `--quiet` removes *all* output on stderr, so we cannot use it.
-    # We need to filter out the first lines, which consist of 2 "blocks",
-    # indented by 2 spaces. They end by a line with only these spaces.
-    first_block_end = stderr.index('  ')
-    second_block_end = stderr.index('  ', first_block_end + 1)
-    # Now, we take only the lines following these blocks.
-    stderr = stderr[second_block_end+1:]
-    # Also remove the line that states that `input.md` was created (+ the
-    # following empty line).
-    output_created_line = stderr.index('Output created: input.md')
-    stderr = stderr[:output_created_line] + stderr[output_created_line+2:]
-    return stderr
 
 
 def test_single_dir(dir_name: str):
@@ -126,18 +94,16 @@ def test_single_dir(dir_name: str):
     start_time = timeit.default_timer()
     command = subprocess.run(
         [
-            'quarto',
-            'render',
+            'pandoc',
+            '--lua-filter',
+            '_extensions/acronyms/parse-acronyms.lua',
+            '-i',
             input_file_path,
-            # Rendering to stdout does not work on Windows until Quarto 1.4,
-            # we need to output to a file instead.
-            # Using `--output filename` outputs to the current working dir
-            # (not what we want); we cannot specify a path in `--output`;
-            # using `--output-dir` does not work, because this is not a
-            # project. So we have no choice (?) but to leave Quarto create
-            # the default file, which has the same name as input, with the
-            # `.md` extension.
-            # '--output', '-',
+            '-r',
+            'markdown',
+            '-w',
+            'markdown',
+            # '--verbose'
         ],
         # We want to capture stdout and stderr
         capture_output=True,
@@ -146,22 +112,24 @@ def test_single_dir(dir_name: str):
     )
     end_time = timeit.default_timer()
     # Get return code, standard error (errors or warnings log).
-    code, stderr = command.returncode, command.stderr.split('\n')
-
-    # Read the output document
-    stdout = read_file(output_file_path, default="")
-    # Filer stdout and stderr because Quarto *loves* adding stuff...
-    filtered_stdout = filter_stdout(stdout)
-    filtered_stderr = filter_stderr(stderr)
-
+    code, stdout, stderr = command.returncode, command.stdout, command.stderr
     # The expected output document
-    expected_output = read_file(test_path / 'expected.md', default=[''])
+    expected_output = read_file(test_path / 'expected.md', default='')
     # The expected errors / warnings log
-    expected_error = read_file(test_path / 'expected.stderr', default=[''])
+    expected_error = read_file(test_path / 'expected.stderr', default='')
+
+    print('\n\nSTDERR:')
+    print(stderr)
+
+    import json
+    print('\n\nSTDOUT:')
+    print(json.dumps(stdout, indent=4))
+    print('\n\nEXPECTED:')
+    print(json.dumps(expected_output, indent=4))
 
     success = (code == 0) and\
-              (filtered_stdout == expected_output) and\
-              (filtered_stderr == expected_error)
+              (stdout == expected_output) and\
+              (stderr == expected_error)
 
     return TestResult(
         dir_name,
@@ -169,10 +137,8 @@ def test_single_dir(dir_name: str):
         code,
         input_file_path,
         stdout,
-        filtered_stdout,
         expected_output,
         stderr,
-        filtered_stderr,
         expected_error,
         end_time - start_time
     )
@@ -312,7 +278,7 @@ def main(tests_to_perform) -> int:
     # Quarto needs to access the `_extensions` folder that is in the project
     # root (the parent folder). We thus ensure that a symbolic link exists.
     ensure_symlink_exists()
-    
+
     # If tests were specified in args, run only them.
     # Otherwise, run all tests in the tests/ folder.
     if len(tests_to_perform) == 0:

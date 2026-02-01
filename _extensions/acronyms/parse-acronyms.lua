@@ -11,6 +11,9 @@
     List.
 ]]
 
+local script_dir = debug.getinfo(1, "S").source:match("@(.*/)")
+package.path = script_dir .. "?.lua;" .. package.path
+
 -- Some helper functions
 local Helpers = require("acronyms_helpers")
 
@@ -91,10 +94,10 @@ function appendLoA(doc)
         -- Insert at the last block in the document
         pos = #doc.blocks + 1
     else
-        pandoc.log.error(
-            "[acronyms] Unrecognized option `insert_loa`=`",
-            tostring(Options["insert_loa"]),
-            "` in `appendLoA`."
+        pandoc.log.warn(
+            "[acronyms] Unrecognized option `insert_loa`=`"
+            .. tostring(Options["insert_loa"])
+            .. "` in `appendLoA`."
         )
         assert(false)
     end
@@ -147,18 +150,19 @@ function replaceAcronym(el)
 
     if Options.format == "latex" then
         -- Match \acr{key}, \acrs{key}, or with an option: \acr[opt]{key}, \acrs[opt]{key}
-        local pattern = "\\(acrs?)%(.-)%b%[%]{(.+)}"
+        local pattern = "\\(acrs?)%[?(.-)%]?{(.+)}"
         command, opts_str, acr_key = string.match(el.text, pattern)
-        isPlural = (command:sub(-1) == "s")
+        isPlural = command and (command:sub(-1) == "s")
     elseif Options.format == "markdown" then
         -- Match +key (singular), *key (plural), or with an option: +key{opt}, *key{opt}
-        local pattern = "([%+%*])(%w+)(.-)%b{}"
+        local pattern = "([%+%*])(%w+){?(.-)}?"
         command, acr_key, opts_str = string.match(el.text, pattern)
         isPlural = (command == "*")
     elseif Options.format == "basic" then
         -- Match KEY
-        local pattern = "(%u+)"
+        local pattern = "^(%u+)$"
         acr_key = string.match(el.text, pattern)
+        isPlural = false
     end
 
     if acr_key then
@@ -209,6 +213,7 @@ end
 return {
     { Meta = Meta },
     { RawInline = replaceAcronym },
+    { Str = replaceAcronym },
     { RawBlock = RawBlock },
     { Pandoc = appendLoA },
 }
