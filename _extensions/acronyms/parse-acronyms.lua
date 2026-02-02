@@ -26,6 +26,7 @@ local AcronymsPandoc = require("acronyms_pandoc")
 -- The options for the List Of Acronyms, as defined in the document's metadata.
 local Options = require("acronyms_options")
 
+
 -- Parse options within old style
 local function parse_opts(opts_str)
   local opts = {}
@@ -47,31 +48,73 @@ local function parse_opts(opts_str)
   return opts
 end
 
+
+-- Match \acr{key}, \acrs{key}, or with an option: \acr[opt]{key}, \acrs[opt]{key}
+local LATEX_PATTERN = "\\(acrs?)%[?(.-)%]?{(.+)}"
+-- Match +key (singular), *key (plural), or with an option: +key{opt}, *key{opt}
+local MD_PATTERN = "([%+%*])(%w+){?(.-)}?"
+-- Match KEY
+local BASIC_PATTERN = "^(%u+)$"
+
+
+local function parseKey(text)
+    local command, key, opts, plural
+
+    if Options.format == "latex" then
+        command, opts, key = string.match(text, LATEX_PATTERN)
+        plural = command and (command:sub(-1) == "s")
+    elseif Options.format == "markdown" then
+        command, key, opts = string.match(text, MD_PATTERN)
+        plural = command and (command == "*")
+    elseif Options.format == "basic" then
+        key = string.match(text, BASIC_PATTERN)
+        plural = false
+    end
+
+    return key, opts, plural
+end
+
+
 --[[
-    Parse the document's metadata, including options, and acronyms' definitions.
-    It does not change the metadata.
+Replace each `\acr{KEY}` (or `\acr[opt]{KEY}`) with the correct text and link to the list of acronyms.
 --]]
-function Meta(m)
-    Options:parseOptionsFromMetadata(m)
+local function replaceAcronym(text)
+    local key, opts, plural = parseKey(text)
 
-    -- Parse acronyms directly from the metadata (`acronyms.keys`)
-    Acronyms:parseFromMetadata(m, Options["on_duplicate"])
+    if key then
+        -- parse the options
+        opts = parse_opts(opts)
 
-    -- Parse acronyms from external files
-    if (m and m.acronyms and m.acronyms.fromfile) then
-        if Helpers.isMetaList(m.acronyms.fromfile) then
-            -- We have several files to read
-            for _, filepath in ipairs(m.acronyms.fromfile) do
-                filepath = pandoc.utils.stringify(filepath)
-                Acronyms:parseFromYamlFile(filepath, Options["on_duplicate"])
+        if Acronyms:contains(key) then
+            local style = opts.style or nil
+
+            local insert_links = nil
+            if opts.insert_links ~= nil then
+              insert_links = Helpers.str_to_boolean(opts.insert_links)
             end
+
+            local is_first_use = nil
+            if opts.first_use ~= nil then
+              is_first_use = Helpers.str_to_boolean(opts.first_use)
+            end
+
+            plural = plural or (opts.plural == "true" or opts.plural == true)
+
+            local case_target = opts.case_target
+
+            local case = opts.case
+
+            return AcronymsPandoc.replaceExistingAcronym(
+                key, style, is_first_use, insert_links, plural, case_target, case
+            )
         else
-            -- We have a single file
-            local filepath = pandoc.utils.stringify(m.acronyms.fromfile)
-            Acronyms:parseFromYamlFile(filepath, Options["on_duplicate"])
+            -- The acronym does not exists
+            local non_existing = opts.non_existing or nil
+            return AcronymsPandoc.replaceNonExistingAcronym(key, non_existing)
         end
     end
 
+    -- This is not an acronym, return nil to leave it unchanged.
     return nil
 end
 
@@ -113,6 +156,37 @@ local function appendLoA(doc)
 end
 
 
+local function Str(el)
+    local format = Options.format
+
+    io.stderr:write('STR: ' .. el.text .. ' ')
+    if format == "markdown" or format == "basic" then
+        return replaceAcronym(el.text)
+    end
+
+    return nil
+end
+
+
+local function Para(el)
+    return pandoc.walk_block(el, { Str = Str })
+end
+
+
+local function Header(el)
+    return pandoc.walk_block(el, { Str = Str })
+end
+
+
+local function RawInline(el)
+    if Options.format == "latex" then
+        return replaceAcronym(el.text)
+    end
+
+    return nil
+end
+
+
 --[[
     Place the List of Acronyms in the document, in place of a `\printacronysm`.
 
@@ -123,7 +197,7 @@ end
     from Inlines). Thus, `\printacronyms` needs to be in its own Block (no
     other text!).
 --]]
-function RawBlock(el)
+local function RawBlock(el)
     -- The block's content must be exactly "\printacronyms"
     if not (el and el.text == "\\printacronyms") then
         return nil
@@ -139,84 +213,38 @@ function RawBlock(el)
 end
 
 
--- Match \acr{key}, \acrs{key}, or with an option: \acr[opt]{key}, \acrs[opt]{key}
-local LATEX_PATTERN = "\\(acrs?)%[?(.-)%]?{(.+)}"
--- Match +key (singular), *key (plural), or with an option: +key{opt}, *key{opt}
-local MD_PATTERN = "([%+%*])(%w+){?(.-)}?"
--- Match KEY
-local BASIC_PATTERN = "^(%u+)$"
-
-
-local function parseKey(text)
-    local command, key, opts, plural
-
-    if Options.format == "latex" then
-        command, opts, key = string.match(text, LATEX_PATTERN)
-        plural = command and (command:sub(-1) == "s")
-    elseif Options.format == "markdown" then
-        command, key, opts = string.match(text, MD_PATTERN)
-        plural = command and (command == "*")
-    elseif Options.format == "basic" then
-        key = string.match(text, BASIC_PATTERN)
-        plural = false
-    end
-
-    return key, opts, plural
-end
-
-
 --[[
-Replace each `\acr{KEY}` (or `\acr[opt]{KEY}`) with the correct text and link to the list of acronyms.
+    Parse the document's metadata, including options, and acronyms' definitions.
+    It does not change the metadata.
 --]]
-local function replaceAcronym(el)
-    local key, opts, plural = parseKey(el.text)
+local function Meta(m)
+    Options:parseOptionsFromMetadata(m)
 
-    if key then
-        -- parse the options
-        opts = parse_opts(opts)
+    -- Parse acronyms directly from the metadata (`acronyms.keys`)
+    Acronyms:parseFromMetadata(m, Options["on_duplicate"])
 
-        if Acronyms:contains(key) then
-            local style = opts.style or nil
-
-            local insert_links = nil
-            if opts.insert_links ~= nil then
-              insert_links = Helpers.str_to_boolean(opts.insert_links)
+    -- Parse acronyms from external files
+    if (m and m.acronyms and m.acronyms.fromfile) then
+        if Helpers.isMetaList(m.acronyms.fromfile) then
+            -- We have several files to read
+            for _, filepath in ipairs(m.acronyms.fromfile) do
+                filepath = pandoc.utils.stringify(filepath)
+                Acronyms:parseFromYamlFile(filepath, Options["on_duplicate"])
             end
-
-            local is_first_use = nil
-            if opts.first_use ~= nil then
-              is_first_use = Helpers.str_to_boolean(opts.first_use)
-            end
-
-            plural = plural or (opts.plural == "true" or opts.plural == true)
-
-            local case_target = opts.case_target
-
-            local case = opts.case
-
-            return AcronymsPandoc.replaceExistingAcronym(
-                key, style, is_first_use, insert_links, plural, case_target, case
-            )
         else
-            -- The acronym does not exists
-            local non_existing = opts.non_existing or nil
-            return AcronymsPandoc.replaceNonExistingAcronym(key, non_existing)
+            -- We have a single file
+            local filepath = pandoc.utils.stringify(m.acronyms.fromfile)
+            Acronyms:parseFromYamlFile(filepath, Options["on_duplicate"])
         end
     end
 
-    -- This is not an acronym, return nil to leave it unchanged.
     return nil
 end
 
 
--- Force the execution of the Meta filter before the RawInline
--- (we need to load the acronyms first!)
--- RawBlock and Doc happen after RawInline so that the actual usage order
--- of acronyms is known (and we can sort the List of Acronyms accordingly)
-return {
-    { Meta = Meta },
-    { RawInline = replaceAcronym },
-    { Str = replaceAcronym },
-    { RawBlock = RawBlock },
-    { Pandoc = appendLoA },
-}
+function Pandoc(doc)
+    doc = doc:walk { Meta = Meta }
+    doc = doc:walk { RawInline = RawInline, Header = Header, Para = Para }
+    doc = doc:walk { RawBlock = RawBlock }
+    return doc:walk { Pandoc = appendLoA }
+end
