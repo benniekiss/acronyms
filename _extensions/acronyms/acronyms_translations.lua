@@ -49,9 +49,12 @@ function Translations:find_best(lang, translations)
         if translations[lang_components[i]] ~= nil then
             local found_lang = lang_components[i]
             local found_translation = translations[lang_components[i]]
-            pandoc.log.info("[acronyms] Found translation "
-            .. found_translation
-            .. " for lang ", found_lang)
+            pandoc.log.info(
+                "[acronyms] Found translation "
+                .. found_translation
+                .. " for lang "
+                .. found_lang
+            )
             return {
                 ["lang"] = found_lang,
                 ["translation"] = found_translation
@@ -71,8 +74,9 @@ function Translations:get_loa_title(lang)
             .. " Please ensure that a default translation is available for loa_title"
         )
         assert(false)
+    else
+        return found["translation"]
     end
-    return found["translation"]
 end
 
 return Translations

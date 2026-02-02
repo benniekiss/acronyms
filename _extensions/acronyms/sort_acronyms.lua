@@ -43,7 +43,7 @@ end
 
 
 -- The "public" API, i.e., the function returned by `require`.
-function sort_acronyms(acronyms, criterion, include_unused)
+local function sort_acronyms(acronyms, criterion, include_unused)
     assert(acronyms ~= nil,
         "[acronyms] The acronyms table must not be nil in sort_acronyms!")
     assert(criterion ~= nil,

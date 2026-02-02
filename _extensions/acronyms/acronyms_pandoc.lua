@@ -237,15 +237,18 @@ function AcronymsPandoc.generateLoA(sorting, include_unused, title, header_class
         list_acronyms = AcronymsPandoc.generateCustomFormat(sorted, loa_format)
     end
 
-    header_level = header_level or Options['loa_header_level']
-    if tonumber(header_level) == nil then
+    header_level = tonumber(header_level or Options['loa_header_level'])
+    if header_level == nil then
         pandoc.log.warn(
-            "[acronyms] Could not cast", header_level, "to number. "
+            "[acronyms] Could not cast"
+            .. tostring(header_level)
+            .. "to number. "
             .. "Please set the `header_level` to a valid integer value."
         )
         assert(false)
     end
-    header_level = math.floor(tonumber(header_level))
+
+    header_level = math.floor(header_level)
     pandoc.log.info("[acronyms] Using header level " .. tostring(header_level))
 
     -- Create the Header (only if the title is not empty)

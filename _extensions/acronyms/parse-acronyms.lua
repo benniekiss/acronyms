@@ -53,8 +53,8 @@ end
 local LATEX_PATTERN = "\\(acrs?)%[?(.-)%]?{(.+)}"
 -- Match +key (singular), *key (plural), or with an option: +key{opt}, *key{opt}
 local MD_PATTERN = "([%+%*])(%w+){?(.-)}?"
--- Match KEY
-local BASIC_PATTERN = "^(%u+)$"
+-- Match KEY, kEY, KeY, etc. Must have an uppercase letter.
+local BASIC_PATTERN = "^(%w-%u+%w-)$"
 
 
 local function parseKey(text)
@@ -157,24 +157,29 @@ end
 
 
 local function Str(el)
+    return replaceAcronym(el.text)
+end
+
+
+local function Para(el)
     local format = Options.format
 
-    io.stderr:write('STR: ' .. el.text .. ' ')
     if format == "markdown" or format == "basic" then
-        return replaceAcronym(el.text)
+       return pandoc.walk_block(el, { Str = Str })
     end
 
     return nil
 end
 
 
-local function Para(el)
-    return pandoc.walk_block(el, { Str = Str })
-end
-
-
 local function Header(el)
-    return pandoc.walk_block(el, { Str = Str })
+    local format = Options.format
+
+    if format == "markdown" or format == "basic" then
+        return pandoc.walk_block(el, { Str = Str })
+    end
+
+    return nil
 end
 
 

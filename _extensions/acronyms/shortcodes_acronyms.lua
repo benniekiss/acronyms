@@ -24,9 +24,6 @@ local Acronyms = require("acronyms")
 -- Replacement functions
 local AcronymsPandoc = require("acronyms_pandoc")
 
--- The options for the List Of Acronyms, as defined in the document's metadata.
-local Options = require("acronyms_options")
-
 
 --[[
     Parse the value and return its string representation if it is not `""`
@@ -52,10 +49,11 @@ end
     Parse an optional value and convert it to a boolean if it was not `nil`.
 --]]
 local function getBooleanOrNil (value)
-    local value = getOrNil(value)
+    value = getOrNil(value)
     if value ~= nil then
         value = Helpers.str_to_boolean(value)
     end
+
     return value
 end
 
@@ -66,13 +64,15 @@ end
     This function is associated to shortcodes `acronym` and `acr` so that it is
     invoked through `{{< acr KEY >}}` or `{{< acronym KEY >}}`.
 --]]
-function replaceAcronym (args, kwargs, meta)
+local function replaceAcronym (args, kwargs, meta)
     -- We want exactly 1 (unnamed) argument for the shortcode.
     if #args == 0 or #args > 1 then
         pandoc.log.warn(
             "[acronyms] Incorrect number of arguments in shortcode `acronym`!\n"
             .. "! Expected exactly 1 argument (the acronym key).\n"
-            .. "x Found ", tostring(#args), ".\n"
+            .. "x Found "
+            .. tostring(#args)
+            .. ".\n"
             .. "i The arguments were: `"
             .. pandoc.utils.stringify(args)
             .. "`.\n"
@@ -112,7 +112,7 @@ end
 --[[
     Generate the List of Acronyms in the document.
 --]]
-function generateListOfAcronyms (args, kwargs, meta)
+local function generateListOfAcronyms (args, kwargs, meta)
     if #args ~= 0 then
         pandoc.log.warn(
             "[acronyms] Unused arguments passed to shortcode `printacronyms`:"

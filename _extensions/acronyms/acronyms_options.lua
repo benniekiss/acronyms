@@ -154,7 +154,9 @@ function Options:parseOptionsFromMetadata(m)
             self.loa_header_level = math.floor(float_value)
         else
             pandoc.log.warn(
-                "[acronyms] Could not cast", str_value, "to an integer. "
+                "[acronyms] Could not cast"
+                .. str_value
+                ..  "to an integer. "
                 .. "Please set option `loa_header_level` to a valid integer value."
             )
             assert(false)

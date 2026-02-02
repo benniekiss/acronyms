@@ -34,13 +34,13 @@
 
 local Helpers = require("acronyms_helpers")
 
+-- The table containing all styles, indexed by the style's name.
+local styles = {}
+
 
 local function capitalize_first(s)
   return (s:gsub("^%l", string.upper))
 end
-
--- The table containing all styles, indexed by the style's name.
-local styles = {}
 
 
 -- Local helper function to create either a Str or a Link,
