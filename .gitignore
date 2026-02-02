@@ -9,5 +9,8 @@
 # Other files
 notes
 
+# VSCodium
+.vscode
+
 # Configuration files (IDEs)
-/.luarc.json
+.luarc.json
